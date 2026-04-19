@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spark 学习指南 | 大数据分布式计算框架</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 自定义配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: '#121212',
+            darker: '#0a0a0a',
+            card: '#1e1e2f',
+            primary: '#00d4ff',
+            secondary: '#7c3aed',
+            accent: '#f472b6',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+      darkMode: 'class',
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .glass {
+        background: rgba(30, 30, 47, 0.8);
+        backdrop-filter: blur(10px);
+      }
+      .gradient-text {
+        background: linear-gradient(90deg, #00d4ff, #7c3aed);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.3);
+      }
+      .step-link {
+        @apply hover:text-primary cursor-pointer transition-all duration-300 inline-flex items-center gap-2;
+      }
+    }
+  </style>
+</head>
+<body class="bg-dark text-gray-200 min-h-screen">
+  <!-- 导航栏 -->
+  <header class="fixed w-full top-0 z-50 glass rounded-b-2xl">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fa fa-bolt text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold gradient-text">Spark 学习指南</h1>
+      </div>
+      <nav class="hidden md:flex gap-6">
+        <a href="#base" class="hover:text-primary transition-colors">基础环境</a>
+        <a href="#mode" class="hover:text-primary transition-colors">部署模式</a>
+        <a href="#advanced" class="hover:text-primary transition-colors">高阶配置</a>
+        <a href="#practice" class="hover:text-primary transition-colors">实战案例</a>
+      </nav>
+      <button class="md:hidden text-xl">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 英雄区 -->
+  <section class="pt-24 pb-16 md:pt-32 md:pb-20 container mx-auto px-4">
+    <div class="text-center max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6 gradient-text">
+        Spark 分布式计算框架
+      </h1>
+      <p class="text-lg md:text-xl text-gray-400 mb-8 leading-relaxed">
+        从零基础到生产级部署，全覆盖 JDK、Hadoop、Zookeeper 环境搭建 + Local/Standalone/HA/Yarn 部署模式
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#base" class="px-6 py-3 bg-primary text-darker font-semibold rounded-full shadow-lg hover:shadow-primary/30 transition-all">
+          开始学习
+        </a>
+        <a href="#advanced" class="px-6 py-3 bg-transparent border border-secondary text-secondary font-semibold rounded-full hover:bg-secondary/10 transition-all">
+          高阶配置
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container mx-auto px-4 pb-20">
+    <!-- 基础环境配置 -->
+    <section id="base" class="mb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+          <i class="fa fa-cogs text-secondary"></i>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-bold">基础环境配置</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- JDK -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+            <i class="fa fa-coffee text-primary text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">JDK 配置</h3>
+          <p class="text-gray-400 mb-4">Spark 基于 Scala 开发，JDK 是运行基础，推荐 JDK8 稳定版本。</p>
+          <div class="bg-darker rounded-xl p-3 text-sm">
+            <code>export JAVA_HOME=/usr/local/jdk8</code>
+          </div>
+        </div>
+
+        <!-- Hadoop -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+            <i class="fa fa-hdd-o text-primary text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Hadoop 配置</h3>
+          <p class="text-gray-400 mb-4">提供 HDFS 存储与 YARN 资源调度，Spark 核心依赖组件。</p>
+          <div class="bg-darker rounded-xl p-3 text-sm">
+            <code>hdfs namenode -format</code>
+          </div>
+        </div>
+
+        <!-- Zookeeper -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+            <i class="fa fa-refresh text-primary text-xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Zookeeper 配置</h3>
+          <p class="text-gray-400 mb-4">分布式协调服务，用于 Spark HA 高可用主备切换。</p>
+          <div class="bg-darker rounded-xl p-3 text-sm">
+            <code>zkServer.sh start</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 基础部署模式 -->
+    <section id="mode" class="mb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+          <i class="fa fa-server text-secondary"></i>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-bold">基础部署模式</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Local 模式 -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+            <i class="fa fa-laptop text-primary"></i> Local 本地模式
+          </h3>
+          <p class="text-gray-400 mb-4">单 JVM 运行，适合开发调试，无需集群，开箱即用。</p>
+          <ul class="space-y-2 text-gray-300 mb-4">
+            <li>✅ 配置极简</li>
+            <li>✅ 快速调试</li>
+            <li>✅ 适合学习入门</li>
+          </ul>
+          <div class="bg-darker rounded-xl p-3 text-sm">
+            <code>spark-shell --master local[*]</code>
+          </div>
+        </div>
+
+        <!-- Standalone 模式 -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+            <i class="fa fa-sitemap text-primary"></i> Standalone 集群模式
+          </h3>
+          <p class="text-gray-400 mb-4">Spark 原生集群模式，Master+Worker 架构，无需依赖 YARN。</p>
+          <ul class="space-y-2 text-gray-300 mb-4">
+            <li>✅ 轻量集群</li>
+            <li>✅ 独立调度</li>
+            <li>✅ 适合小规模部署</li>
+          </ul>
+          <div class="bg-darker rounded-xl p-3 text-sm">
+            <code>start-all.sh</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 高阶配置 -->
+    <section id="advanced" class="mb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+          <i class="fa fa-rocket text-secondary"></i>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-bold">高阶生产配置</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Spark HA -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+            <i class="fa fa-shield text-accent"></i> Spark HA 高可用
+          </h3>
+          <p class="text-gray-400 mb-4">基于 Zookeeper 实现 Master 主备切换，解决单点故障。</p>
+          <div class="bg-darker rounded-xl p-3 text-sm mb-4">
+            <code>spark.deploy.recoveryMode=ZOOKEEPER</code>
+          </div>
+          <p class="text-gray-400">适用：生产级 Standalone 集群，保证服务不间断。</p>
+        </div>
+
+        <!-- Spark on Yarn -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+            <i class="fa fa-cloud text-accent"></i> Spark on YARN
+          </h3>
+          <p class="text-gray-400 mb-4">依托 Hadoop YARN 统一资源调度，企业生产环境首选模式。</p>
+          <div class="bg-darker rounded-xl p-3 text-sm mb-4">
+            <code>spark-submit --master yarn --deploy-mode cluster</code>
+          </div>
+          <p class="text-gray-400">两种模式：Client（调试）/ Cluster（生产）</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 实战案例 -->
+    <section id="practice" class="mb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+          <i class="fa fa-code text-secondary"></i>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-bold">实战案例</h2>
+      </div>
+
+      <div class="bg-card rounded-3xl p-6 md:p-8 card-hover">
+        <h3 class="text-xl font-semibold mb-4">Spark Pi 圆周率计算</h3>
+        <p class="text-gray-400 mb-4">官方示例程序，验证所有部署模式是否正常运行</p>
+        <div class="bg-darker rounded-xl p-4 overflow-x-auto">
+          <pre class="text-gray-300 text-sm">
+spark-submit \
+--master spark://localhost:7077 \
+--class org.apache.spark.examples.SparkPi \
+$SPARK_HOME/examples/jars/spark-examples_2.12-3.4.2.jar \
+10
+          </pre>
+        </div>
+        <p class="mt-4 text-gray-400">运行结果：<span class="text-primary">Pi is roughly 3.1415926</span></p>
+      </div>
+    </section>
+
+    <!-- 学习总结 【优化：可点击跳转】 -->
+    <section class="mb-16">
+      <div class="bg-card rounded-3xl p-6 md:p-8">
+        <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+          <i class="fa fa-map text-primary"></i> Spark 学习路线总结（点击直达）
+        </h3>
+        <div class="space-y-4 text-gray-300 text-lg">
+          <p><a href="#base" class="step-link">🔹 第一步：配置 JDK + Hadoop + Zookeeper 基础环境</a></p>
+          <p><a href="#mode" class="step-link">🔹 第二步：学习 Local 模式快速入门，调试代码逻辑</a></p>
+          <p><a href="#mode" class="step-link">🔹 第三步：搭建 Standalone 集群，理解分布式原理</a></p>
+          <p><a href="#advanced" class="step-link">🔹 第四步：配置 HA 高可用，适配生产稳定性要求</a></p>
+          <p><a href="#advanced" class="step-link">🔹 第五步：部署 Spark on YARN，企业级生产环境标准方案</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 新增：评论区模块 -->
+    <section id="comment" class="mb-16">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+          <i class="fa fa-comments text-secondary"></i>
+        </div>
+        <h2 class="text-2xl md:text-3xl font-bold">网友评论 & 问答</h2>
+      </div>
+
+      <div class="space-y-6">
+        <!-- 评论1 -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="flex items-start gap-4">
+            <img src="https://picsum.photos/id/1005/64/64" class="w-12 h-12 rounded-full object-cover" alt="用户头像">
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold text-white">大数据初学者</h4>
+                <span class="text-xs text-gray-400">2天前</span>
+              </div>
+              <p class="text-gray-300 mb-3">请问博主，Local模式启动spark-shell报错：JAVA_HOME未配置，该怎么解决？</p>
+              <div class="bg-darker p-4 rounded-2xl">
+                <p class="text-sm text-primary"><i class="fa fa-reply mr-2"></i>博主回复：</p>
+                <p class="text-sm text-gray-300 mt-1">检查/etc/profile文件，确保JAVA_HOME路径正确，执行source /etc/profile生效后重新启动即可~</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 评论2 -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="flex items-start gap-4">
+            <img src="https://picsum.photos/id/1012/64/64" class="w-12 h-12 rounded-full object-cover" alt="用户头像">
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold text-white">架构师小菜</h4>
+                <span class="text-xs text-gray-400">1天前</span>
+              </div>
+              <p class="text-gray-300 mb-3">Spark HA高可用必须配置Zookeeper吗？有没有其他替代方案？</p>
+              <div class="bg-darker p-4 rounded-2xl">
+                <p class="text-sm text-primary"><i class="fa fa-reply mr-2"></i>博主回复：</p>
+                <p class="text-sm text-gray-300 mt-1">Standalone模式的HA只能用Zookeeper实现主备切换；如果是生产环境，推荐直接使用Spark on YARN，天然高可用~</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 评论3 -->
+        <div class="bg-card rounded-3xl p-6 card-hover">
+          <div class="flex items-start gap-4">
+            <img src="https://picsum.photos/id/1025/64/64" class="w-12 h-12 rounded-full object-cover" alt="用户头像">
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-semibold text-white">开发小哥</h4>
+                <span class="text-xs text-gray-400">12小时前</span>
+              </div>
+              <p class="text-gray-300 mb-3">Spark on YARN的client和cluster模式到底该怎么选？</p>
+              <div class="bg-darker p-4 rounded-2xl">
+                <p class="text-sm text-primary"><i class="fa fa-reply mr-2"></i>博主回复：</p>
+                <p class="text-sm text-gray-300 mt-1">开发调试用client（日志实时输出），生产环境用cluster（Driver运行在集群，关闭客户端不影响任务）。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 评论输入框 -->
+        <div class="bg-card rounded-3xl p-6">
+          <h4 class="font-semibold mb-4">发表你的评论</h4>
+          <textarea class="w-full bg-darker border border-gray-700 rounded-2xl p-4 text-gray-200 focus:outline-none focus:border-primary resize-none" rows="4" placeholder="欢迎提问、交流Spark学习心得..."></textarea>
+          <button class="mt-4 px-6 py-3 bg-primary text-darker font-semibold rounded-full hover:shadow-primary/30 transition-all">
+            提交评论
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-darker py-8 rounded-t-3xl">
+    <div class="container mx-auto px-4 text-center">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <i class="fa fa-bolt text-primary text-2xl"></i>
+        <h2 class="text-xl font-bold gradient-text">Spark 学习指南</h2>
+      </div>
+      <p class="text-gray-500">© 2025 大数据学习实战 | 全栈式 Spark 教程</p>
+    </div>
+  </footer>
+</body>
+</html>
