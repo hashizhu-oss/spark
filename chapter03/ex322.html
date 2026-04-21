@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兰亭集序 - 优化展示</title>
+    <style>
+        /* 全局重置与字体优化 */
+        body {
+            font-family: "KaiTi", "楷体", serif; /* 使用楷体更符合古文意境 */
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            color: #333;
+        }
+
+        /* 列表容器样式 */
+        ul {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            list-style-type: circle; /* 默认使用空心圆点 */
+            list-style-position: inside; /* 符号在文字内部 */
+        }
+
+        /* 列表项通用样式 */
+        li {
+            margin-bottom: 15px;
+            line-height: 1.8; /* 增加行高，提升阅读体验 */
+            font-size: 18px;
+        }
+
+        /* 针对特定类的样式优化 */
+        .one {
+            /* 使用网络图片作为演示，实际使用时请换回你的本地路径 ./images/1.png */
+            list-style-image: url(./images/1.png); 
+            list-style-position: inside;
+            font-weight: bold; /* 加粗强调 */
+            color: #b71c1c; /* 深红色文字 */
+        }
+        
+        /* 鼠标悬停效果 */
+        li:hover {
+            background-color: #fafafa;
+            border-radius: 4px;
+            padding-left: 5px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 修复：将 li 包裹在 ul 中 -->
+    <ul>
+        <li class="one">永和九年岁在癸丑，暮春之初会与其山亭至于，修葺事也</li>
+        <li>群贤毕至，少长咸集</li>
+        <li>此地有崇山峻岭，茂林修竹，又有清流击穿，映带左右引以为流畅曲水列坐其次</li>
+    </ul>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="echarts.min.js"></script>
+</head>
+<body>
+    <div style="width: 1000px;height: 674px;"></div>
+    <script>
+        //水泵数据
+        var pump=[{"name":"pump1","x":113,"y":168},
+                  {"name":"pump2","x":478,"y":273} ,  
+                  {"name":"pump3","x":862,"y":525} ,
+                  {"name":"pump4","x":568,"y":646} ]
+        var pumpData=[]
+        for(var i=0;i<pump.length;i++) {
+            var x =pump[i].x
+            var y =pump[i].y
+            var newArr=[x,y]
+            pumpData.push(newArr)
+        }
+        //死亡人数数据
+        var deaths=[{"name":"deaths1","x":304,"y":121,"num":5},
+                    {"name":"deaths2","x":163,"y":360,"num":8},
+                    {"name":"deaths3","x":454,"y":193,"num":20},
+                    {"name":"deaths4","x":725,"y":433,"num":10},
+                    {"name":"deaths5","x":438,"y":299,"num":4},
+                    {"name":"deaths6","x":362,"y":343,"num":5},
+                    {"name":"deaths7","x":499,"y":312,"num":5},
+                    {"name":"deaths8","x":518,"y":349,"num":2},
+                    {"name":"deaths9","x":671,"y":568,"num":4},
+                    {"name":"deaths10","x":785,"y":161,"num":5},
+                    {"name":"deaths11","x":759,"y":328,"num":8}]
+        var deathsData=[]
+        for(var i=0;i<deaths.length;i++){
+            var x=deaths[i].x
+            var y=deaths[i].y
+            var num=deaths[i].num
+            var newArr=[x,y,num]
+            deathsData.push(newArr)
+        }
+        var mChart=ECharts.init(document.querySelector('div'))
+        var option={
+            xAxis:{
+                type:'value',
+                show:true,
+                position:'top',
+                offset:0,
+                min:0,
+                max:1000
+            },
+            yAxis:{
+                type:'value',
+                show:true,
+                inverse:true,
+                offset:0,
+                min:0,
+                max:674
+            },
+            series:[
+                {
+                    name:'pump',
+                    type:'scattrt',
+                    data:pumpData,
+                    symbolSize:20,
+                    itemStyle:{
+                        color:'rgb(0.0.255)'
+                    },
+                },
+
+                {
+                    name:'deaths',
+                    type:'scatter',
+                    data:deathsData,
+                    symbolSize:function(data){
+                        return data[2]*2;
+                    }
+
+                }
+            ]
+        }
+            </script>    
+</body>
+</html>

@@ -1,0 +1,11 @@
+h2{
+    font-size: large;
+    font-style: oblique;
+    color: cadetblue;
+}
+
+p{
+    font-display: block;
+    font-size: 30px;
+    color: bisque;
+}
