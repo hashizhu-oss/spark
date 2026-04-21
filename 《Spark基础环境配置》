@@ -1,0 +1,171 @@
+Spark基础环境配置
+Spark作为大数据领域主流的分布式计算框架，其稳定运行依赖于JDK、Hadoop、Zookeeper三大基础环境的正确配置。无论是本地开发调试还是集群部署，基础环境的搭建都是第一步，也是最关键的一步——环境配置不当，后续Spark安装和任务运行都会出现各种异常。本文将针对初学者，详细讲解三大基础环境的版本选型、分步配置及验证方法，全程实操可落地，避开常见踩坑点。
+一、环境选型核心原则（避坑关键）
+Spark与JDK、Hadoop、Zookeeper的版本兼容性直接决定环境稳定性，推荐采用经过生产验证的“黄金组合”，避免版本不匹配导致的启动失败、功能异常等问题。结合当前（2026年）稳定版本，推荐选型如下（兼顾学习和生产场景）：
+组件
+推荐版本
+选型理由
+JDK
+JDK 8u202（LTS版）
+生态成熟，经过十年以上生产验证，是Spark 3.x系列的最佳兼容版本，支持Lambda/Stream等关键特性，且获得长期安全更新。
+Hadoop
+Hadoop 3.3.6
+3.x系列稳定版，支持纠删码、多NameNode等现代特性，与Spark 3.4.2深度集成，兼顾稳定性和功能完整性，适合学习和生产部署。
+Zookeeper
+Zookeeper 3.8.4
+最新稳定版，兼容Hadoop 3.x和Spark 3.x，支持单机和集群模式，用于Spark HA（高可用）部署时的主备切换管理。
+注意：避免使用JDK 11及以上版本（部分Spark依赖包不兼容），Hadoop版本需与Spark预编译版本对应（如Spark 3.4.2对应Hadoop 3.x），Zookeeper版本需与Hadoop版本匹配，否则会出现通信异常。
+二、JDK安装与配置（Spark运行的基础）
+Spark基于Scala开发，而Scala运行依赖JDK，因此JDK是所有环境的基础，必须优先配置。以下操作以Linux（CentOS/Ubuntu）为例，Windows系统操作逻辑类似，可对应调整路径。
+2.1 下载与解压
+1. 访问Oracle官网或OpenJDK官网，下载JDK 8u202安装包（.tar.gz格式），建议选择OpenJDK（开源免费，无需注册）。
+2. 将安装包上传至Linux服务器（如/usr/local/software目录），执行解压命令：
+        tar -zxvf openjdk-8u202-linux-x64.tar.gz -C /usr/local/
+3. 解压后重命名（便于后续配置）：
+        mv /usr/local/openjdk-8u202-linux-x64 /usr/local/jdk8
+2.2 配置环境变量
+1. 编辑系统环境变量配置文件（全局生效，适合所有用户）：
+vim /etc/profile
+2. 在文件末尾添加以下内容（路径需与实际解压路径一致）：
+        export JAVA_HOME=/usr/local/jdk8
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+3. 使环境变量立即生效：
+        source /etc/profile
+2.3 验证配置
+执行以下命令，若输出JDK版本信息，则说明配置成功：
+      java -version
+echo $JAVA_HOME
+补充测试：可编写简单Java程序验证编译和运行功能，创建Test.java文件，编译运行后输出“JDK Installation Successful!”即确认功能完整。
+三、Hadoop安装与配置（提供存储和资源管理）
+Spark本身不提供分布式存储和资源调度能力，需依赖Hadoop的HDFS（分布式文件系统）存储数据、YARN（资源调度框架）分配资源。本文讲解伪分布式配置（单节点模拟集群，适合初学者学习），集群配置可在此基础上扩展。
+3.1 前置准备（必做）
+1. 关闭防火墙（避免端口被拦截）：
+systemctl stop firewalld
+systemctl disable firewalld
+2. 配置SSH免密登录（Hadoop集群节点间通信需要）：
+ssh-keygen -t rsa  # 一路回车，生成密钥对
+ssh-copy-id localhost  # 免密登录本机
+3.2 下载与解压
+1. 访问Apache Hadoop官网，下载Hadoop 3.3.6安装包（.tar.gz格式）。
+2. 上传至Linux服务器，解压至指定目录：
+        tar -zxvf hadoop-3.3.6.tar.gz -C /usr/local/
+mv /usr/local/hadoop-3.3.6 /usr/local/hadoop
+3.3 核心配置（关键步骤）
+Hadoop配置文件位于/usr/local/hadoop/etc/hadoop目录下，需修改4个核心配置文件：
+3.3.1 hadoop-env.sh（指定JDK路径）
+vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+添加JDK路径（与前文JDK配置一致）：
+      export JAVA_HOME=/usr/local/jdk8
+export HADOOP_HOME=/usr/local/hadoop
+3.3.2 core-site.xml（核心配置）
+vim /usr/local/hadoop/etc/hadoop/core-site.xml
+在<configuration>标签内添加以下内容：
+      <property>
+  <name>fs.defaultFS</name>
+  <value>hdfs://localhost:9820&lt;/value&gt;  <!-- HDFS默认访问地址 -->
+</property>
+<property>
+  <name>hadoop.tmp.dir</name>
+  <value&gt;/usr/local/hadoop/tmp&lt;/value&gt;  <!-- 临时文件存储目录 -->
+</property>
+3.3.3 hdfs-site.xml（HDFS配置）
+vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+添加以下内容（伪分布式模式，副本数设为1）：<property>
+  <name>dfs.replication</name>
+  <value>1</value>  <!-- 副本数，单节点只能设为1 -->
+</property>
+<property>
+  <name>dfs.namenode.name.dir</name>
+  <value>/usr/local/hadoop/hdfs/name&lt;/value&gt;  <!-- NameNode数据存储目录 -->
+</property>
+<property>
+  <name>dfs.datanode.data.dir</name&gt;
+  &lt;value&gt;/usr/local/hadoop/hdfs/data&lt;/value&gt;  <!-- DataNode数据存储目录 -->
+</property>
+3.3.4 mapred-site.xml（MapReduce配置）
+cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
+添加以下内容（指定MapReduce运行在YARN上）：
+      <property>
+  <name>mapreduce.framework.name</name>
+  <value>yarn</value>
+</property>
+3.3.5 yarn-site.xml（YARN配置）
+vim /usr/local/hadoop/etc/hadoop/yarn-site.xml
+添加以下内容：
+      <property>
+  <name>yarn.resourcemanager.hostname&lt;/name&gt;
+  &lt;value&gt;localhost&lt;/value&gt;  <!-- 资源管理器主机名 -->
+</property>
+<property>
+  <name>yarn.nodemanager.aux-services</name>
+  <value>mapreduce_shuffle&lt;/value&gt;  <!-- 启用MapReduce shuffle -->
+</property>
+3.4 环境变量配置
+vim /etc/profile
+添加Hadoop环境变量：
+      export HADOOP_HOME=/usr/local/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+使环境变量生效：
+      source /etc/profile
+3.5 初始化与启动
+1. 初始化HDFS（首次启动必做）：
+        hdfs namenode -format出现“successfully formatted”提示，说明初始化成功。
+2. 启动Hadoop（HDFS和YARN）：
+start-dfs.sh  # 启动HDFS
+start-yarn.sh  # 启动YARN
+3.6 验证配置
+1. 执行jps命令，查看进程（出现以下进程说明启动成功）：
+jps预期进程：NameNode、DataNode、SecondaryNameNode、ResourceManager、NodeManager
+2. 命令行验证HDFS：
+        hadoop fs -mkdir /test  # 创建/test目录
+hadoop fs -ls /  # 查看根目录下的文件/目录
+3. Web端验证：访问http://服务器IP:9870（HDFS Web界面）、http://服务器IP:8088（YARN Web界面），能正常访问即说明配置成功。
+常见问题：启动时提示“JAVA_HOME is not set and could not be found”，需重新检查hadoop-env.sh中的JAVA_HOME路径，确保与实际JDK路径一致；DataNode启动失败，可删除hdfs/data目录下的文件，重新执行hdfs namenode -format后再启动。
+四、Zookeeper安装与配置（Spark HA必备）
+Zookeeper是分布式协调框架，主要用于Spark集群的高可用（HA）部署，管理Spark Master节点的主备切换，避免单点故障。即使是本地开发，提前配置Zookeeper也能为后续集群部署做好准备，本文讲解单机模式配置。
+4.1 下载与解压
+1. 访问Apache Zookeeper官网，下载Zookeeper 3.8.4安装包（.tar.gz格式）。
+2. 上传至Linux服务器，解压至指定目录：
+       tar -zxvf apache-zookeeper-3.8.4-bin.tar.gz -C /usr/local/
+mv /usr/local/apache-zookeeper-3.8.4-bin /usr/local/zookeeper
+4.2 核心配置
+1. 进入配置目录，复制模板配置文件并修改：
+        cd /usr/local/zookeeper/conf
+cp zoo_sample.cfg zoo.cfg  # 复制模板文件
+vim zoo.cfg
+2. 修改核心配置（重点修改数据存储目录）：
+        # 数据存储目录（需手动创建）
+dataDir=/usr/local/zookeeper/data
+# 客户端连接端口（默认2181，无需修改）
+clientPort=2181
+# 集群配置（单机模式无需添加，集群模式需配置各节点信息）
+# server.1=node1:2888:3888
+# server.2=node2:2888:3888
+# server.3=node3:2888:3888说明：2888端口用于Follower连接Leader，3888端口用于节点选举，单机模式无需配置集群相关内容。
+3. 创建数据存储目录：
+        mkdir -p /usr/local/zookeeper/data
+4. （集群模式必做）创建myid文件：单机模式无需操作，集群模式需在每个节点的dataDir目录下创建myid文件，写入节点编号（与zoo.cfg中的server.X对应），如echo "1" > /usr/local/zookeeper/data/myid。
+4.3 环境变量配置
+vim /etc/profile
+添加Zookeeper环境变量：
+      export ZOOKEEPER_HOME=/usr/local/zookeeper
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+使环境变量生效：
+      source /etc/profile
+4.4 启动与验证
+1. 启动Zookeeper：
+        zkServer.sh start
+2. 查看Zookeeper状态（单机模式显示Mode: standalone）：
+        zkServer.sh status
+3. 客户端连接验证：
+        zkCli.sh -server localhost:2181出现“[zk: localhost:2181(CONNECTED)]”提示，说明连接成功，输入quit可退出客户端。
+常见问题：启动失败提示“Address already in use”，说明2181端口被占用，可执行netstat -tlnp | grep 2181查看占用进程，kill进程后重新启动；集群模式无法启动，检查myid文件与zoo.cfg配置是否一致、各节点防火墙是否关闭。
+五、总结与后续操作
+至此，Spark运行所需的三大基础环境（JDK、Hadoop、Zookeeper）已全部配置完成。总结核心要点：
+- 版本兼容是前提，严格按照推荐版本组合配置，避免踩版本坑；
+- 环境变量配置后需执行source命令生效，路径需与实际安装路径一致；
+- Hadoop初始化仅需执行一次，重复初始化会导致数据丢失；
+- Zookeeper单机模式适用于开发测试，集群模式需配置myid和节点信息，用于Spark HA部署。
+基础环境配置完成后，后续可进行Spark的安装与配置——将Spark与Hadoop、Zookeeper关联，实现分布式计算任务的提交与运行。
